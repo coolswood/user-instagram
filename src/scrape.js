@@ -1,7 +1,8 @@
 const axios = require('axios');
 const {normalizeUrl, normalizePostUrl} = require('../src/util');
-const UnableToFetchUserDataError = require('./Errors/UnableToFetchUserDataError');
-const UnableToFetchPostDataError = require('./Errors/UnableToFetchPostDataError');
+const UnableToFetchUserDataError = require('./Exceptions/UnableToFetchUserDataError');
+const UnableToFetchPostDataError = require('./Exceptions/UnableToFetchPostDataError');
+const util = require('util')
 
 /**
  * Gets the data from the GraphQL Instagram interface.
@@ -84,6 +85,7 @@ module.exports.getPostData = (shortcode) => {
     axios(REQUEST_PARAMETERS)
       .then(GQL => {
         const media_data = GQL.data.graphql.shortcode_media;
+        
         const has_caption = media_data.edge_media_to_caption.edges.length > 0;
         resolve({
           link: URL.replace('/?__a=1', ''),
@@ -121,7 +123,9 @@ module.exports.getPostData = (shortcode) => {
               shortcode: edge.node.shortcode,
               dimensions: edge.node.dimensions,
               displayUrl: edge.node.display_url,
-              isVideo: edge.node.is_video
+              displayResources: edge.node.display_resources.map(res => res),
+              videoUrl: edge.node.is_video ? edge.node.video_url : null,
+              isVideo: edge.node.is_video,
             }
           }) : [],
           comments: media_data.edge_media_to_parent_comment.edges.map(edge => {
